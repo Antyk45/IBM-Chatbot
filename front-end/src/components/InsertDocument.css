@@ -1,0 +1,53 @@
+.file-upload-container {
+    position: relative; /* Set position to relative */
+    height: 100vh; /* Set the container height to full viewport height */
+  }
+  
+  .upload-text {
+    position: absolute; /* Position the text absolutely */
+    top: calc(50% - 250px); /* Center the text vertically */
+    left: -380px; /* Center the text horizontally */
+    width: 100%; /* Make sure it spans the full width */
+    text-align:center; /* Center the text horizontally */
+    font-size: 25px;
+    color:black;
+    white-space: nowrap; /* Prevent button text from wrapping */
+
+  }
+  .upload-text h1 {
+    margin-left: 100px;;
+    font-size: 32px;
+    margin-bottom: 10px;
+  }
+  
+  .upload-text h2 {
+    margin-left: 25px;
+    font-size: 25px;
+    margin-bottom: 10px;
+  }
+  
+  .upload-text h3 {
+    font-size: 20px;
+  }
+  
+  .upload-button {
+    position: absolute; /* Position the button absolutely */
+    top: 50%; /* Center the button vertically */
+    left: 50%; /* Center the button horizontally */
+    transform: translate(-50%, -50%); /* Adjust to center properly */
+    padding: 30px 80px;
+    background-color: #CA6267;
+    color: white;
+    border: 2px solid black; /* Specify border style, width, and color */
+    border-radius: 80px;
+    cursor: pointer;
+    font-size: 19px;
+    white-space: nowrap; /* Prevent button text from wrapping */
+
+  }
+  
+  /* Optionally style the file input */
+  input[type="file"] {
+    display: none; /* Hide the file input */
+  }
+  

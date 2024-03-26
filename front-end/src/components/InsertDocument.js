@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { saveAs } from 'file-saver';
+import './InsertDocument.css'; // Import CSS file for styling
 
 function FileUpload() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -20,9 +21,14 @@ function FileUpload() {
   };
 
   return (
-    <div>
-      <input type="file" accept=".csv" onChange={handleFileChange} />
-      <button onClick={() => document.querySelector('input[type="file"]').click()}>
+    <div className="file-upload-container">
+    <div className="upload-text">
+       <h1>Welcome to the Insert Document page!</h1>
+       <h2>Just click the button below to insert the .csv file of your choice.</h2>
+       <h3>Then head on over to the Chat With Me tab and ask as many questions as you want!</h3>
+    </div>   
+   <input type="file" accept=".csv" onChange={handleFileChange} />
+      <button className="upload-button" onClick={() => document.querySelector('input[type="file"]').click()}>
         Upload CSV
       </button>
     </div>
