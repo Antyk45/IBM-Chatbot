@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { saveAs } from 'file-saver';
 import './InsertDocument.css'; // Import CSS file for styling
 
+/**
+ * This function handles the file input needed for the user to add their own csv files. 
+ * @returns It returns the file the user has inputted for use in the chatbot. It also has some text in the return as this is how react structures text
+ */
 function FileUpload() {
   const [selectedFile, setSelectedFile] = useState(null);
 
