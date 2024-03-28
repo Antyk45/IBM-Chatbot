@@ -4,6 +4,7 @@ import csv
 from typing import Dict, List, Optional
 from langchain.document_loaders.base import BaseLoader
 from langchain.docstore.document import Document
+from dataclasses import dataclass, Field
 
 class csv_to_langchain:
 
@@ -43,17 +44,22 @@ class csv_to_langchain:
 
     def get_csv(self):
       csvfile = self.add_unique_identifier()
-      return csvfile  
+      return csvfile
 
-# Loads a CSV File into a list of documents
-# Each document represents one row of the CSV file. Every row is converted into a
-# key/value pair and outputted to a new line in the document's page_content.
+ 
 class CSVLoader(BaseLoader):
+    """
+    Loads a CSV File into a list of documents
+    Each document represents one row of the CSV file. Every row is converted into a
+    key/value pair and outputted to a new line in the document's page_content.
+    """
+    
     def __init__(
         self,
         file_path = str,
         source_column: Optional[str] = None,
         metadata_columns: Optional[List[str]] = None,
+        metadata_column_names: Optional[List[str]] = None,
         csv_args: Optional[Dict] = None,
         encoding: Optional[str] = None,
     ):
@@ -62,32 +68,33 @@ class CSVLoader(BaseLoader):
         self.encoding = encoding
         self.csv_args = csv_args or {}
         self.metadata_columns = metadata_columns
+        self.metadata_column_names = metadata_column_names
         
     def load(self) -> List[Document]:
-        # Load data into document objects
-        docs = []
+        """
+        Load data into document objects
+        """
+        
+        documents = []
         with open(self.file_path, newline="", encoding="utf8") as csvfile:
             csv_reader = csv.DictReader(csvfile, **self.csv_args)
-            for i, row in enumerate(csv_reader):
-                content = ""
-                for k, v in row.items():
-                    if((k == "reviews.text") or (k == "name")):
-                        content = content + "".join(f"{k.strip()}: {v.strip()}\n")
-                try:
-                    source = (
-                        row[self.source_column]
-                        if self.source_column is not None
-                        else self.file_path
-                    )
-                except KeyError:
-                    raise ValueError(
-                        f"Source column '{self.source_column}' not found in CSV file."
-                    )
-                metadata = {"source": source, "row": i}
-                if self.metadata_columns:
-                    for k, v in row.items():
-                        if k in self.metadata_columns:
-                            metadata[k] = v
-                doc = Document(page_content=content, metadata=metadata)
-                docs.append(doc)
-        return docs
+            for row, review in enumerate(csv_reader):
+                name = review.get('name') or ''
+                text = review.get('reviews.text') or ''
+                content = f"name: {name}\ntext: {text}"
+                source = review[self.source_column] if self.source_column in review else self.file_path
+                metadata = { "name" : name, "source": source, "row": row }
+                if self.metadata_columns is not None:
+                    if self.metadata_column_names is not None:
+                        mapping = {}
+                        for name, alias in zip(self.metadata_columns, self.metadata_column_names):
+                            mapping[name] = alias
+                        metadata_name_for = lambda name: mapping[name]
+                    else:
+                        metadata_name_for = lambda name: name
+                    for field in self.metadata_columns:
+                        if field in review:
+                            metadata[metadata_name_for(field)] = review[field]
+                document = Document(page_content=content, metadata=metadata)
+                documents.append(document)
+        return documents

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Bot from '../assets/bot.png';
 import User from '../assets/user.png';
+import ExampleQuestions from '../assets/ExampleQuestions.png'; // Import the ExampleQuestions.png image
 import RatingLLms from './RatingLLms.js';
 import './ChatWithMe.css'; // Import the CSS file
 
@@ -17,6 +18,21 @@ const Bubble = ({ sender, message, className, ...props }) =>
     <img src={sender === 'user' ? User : Bot} alt={`${sender} icon`} className="user-icon" />
 </div>
 
+const Answer = ({ type, ...rest }) => {
+    if (type == "regular") {
+        return rest["answer"];
+    } else if (type == "tabular") {
+        return <table>
+                   <tr>
+                       {rest.column_names.map(name => <td><span>{name}</span></td>)}
+                   </tr>
+                   {rest.results.map(result => <tr>{result.map(r => <td><span>{r}</span></td>)}</tr>)}
+               </table>
+    } else {
+        return rest.answer?.trim() ?? <span style={{color: "red"}}>No data!</span>;
+    }
+}
+
 function ChatWithMe() {
     axios.defaults.baseURL = 'http://localhost:5000';
     const [message, setMessage] = useState('');
@@ -25,6 +41,7 @@ function ChatWithMe() {
     const [sources, setSources] = useState([]);
     const [processingUserMessage, setProcessingUserMessage] = useState(false);
     const [llmRatings, setLlmRatings] = useState({});
+    const [showImage, setShowImage] = useState(true); // New state for showing image
 
     useEffect(() => {
         socket.on("socket", (data) => {
@@ -44,6 +61,7 @@ function ChatWithMe() {
     const handleSendMessage = async (event) => {
         event.preventDefault();
         setProcessingUserMessage(() => true);
+        setShowImage(false); // Hide image when sending message
         try {
             if (Object.keys(answers).length === 0) {
                 // no LLM response to select, proceed.
@@ -64,8 +82,9 @@ function ChatWithMe() {
             }
 
             const llms = [...document.querySelectorAll('[name="g2"]:checked')].map((input) => input.value);
+            const sql = document.querySelector('#sql-checkbox').checked;
 
-            await axios.post('/message', {message: message, llms })
+            await axios.post('/message', {message: message, llms, sql })
                 .then(response => {
                     setChatHistory(chatHistory => [...chatHistory, { sender: 'user', message: message }]);
                     setAnswers(Object.fromEntries(response.data.answers.map(answer => [answer.llm, answer])));
@@ -85,11 +104,11 @@ function ChatWithMe() {
           ...prevState,
           [llm]: rating
         }));
-      };
+    };
     
     return (
         <div className="master">
-            <div>
+            <div className="options-pane">
                 <div>
                     <h2>Enabled LLMs</h2>
                     <p>These LLMs will be included in the response</p>
@@ -100,10 +119,20 @@ function ChatWithMe() {
                         </div>
                     ))}
                     <br/>
+
+                    <h2>Enabled Tools</h2>
+                    <p>These tools will be used in the LLM response</p>
+                        <div>
+                            <label>
+                                <input value="sqla" id="sql-checkbox" type="checkbox"/>Table Aggregation Tool - <small>If a question benefits from aggregations over the whole database, the agent will attempt to perform such an aggregation and return a table representing the result.</small>
+                            </label>
+                            <br/>
+                        </div>
+                    <br/>
                 </div>
             </div>
             <div className="messages-pane">
-              
+                {showImage && <img src={ExampleQuestions} alt="Example Questions" />} {/* Image shown before message sent */}
                 <div style={{flex: "1 1 0", overflow: "scroll"}}>
                     <div className="message-bubble">
                         { chatHistory.map((msg, index) => <Bubble {...msg}/>) }
@@ -113,7 +142,11 @@ function ChatWithMe() {
                         sources.length > 0 && (
                             <>
                                 <h3>Sources</h3>
-                                { sources.map((source, index) => <blockquote key={index}>{source}</blockquote>) }
+                                { sources.map((source, index) => (<>
+                                    <p><strong>Product:</strong> {source.productName}<br/>
+                                    <strong>Rating:</strong> {source.rating ?? "N/A"}</p>
+                                    <blockquote key={index}>{source.pageContent}</blockquote>
+                                </>)) }
                             </>
                         )
                     }
@@ -131,9 +164,7 @@ function ChatWithMe() {
                                                 <label>
                                                     <h4>{msg.llm}</h4>
                                                     <input defaultChecked={index == 0} value={msg.llm} id={"..."+index} type="radio" name="g1"/>
-                                                    {msg.answer === undefined
-                                                     ? <span style={{color: "red"}}>No data!</span>
-                                                     : (msg.answer.trim() || <em>...</em>)}
+                                                    <span style={{whiteSpace: "pre-line"}}>{<Answer {...msg}/>}</span>
                                                 </label>
                                                 <div>
                                                     <RatingLLms llm={msg.llm} onRatingChange={handleRatingChange} />

@@ -16,3 +16,8 @@ if os.environ.get("AI21_API_KEY") is None:
   os.environ['AI21_API_KEY'] = ''
 AI21_API_KEY = os.getenv("AI21_API_KEY")
 
+if os.environ.get("FEEDBOT_IGNORE_NEW_DOCUMENTS") is None:
+  os.environ['FEEDBOT_IGNORE_NEW_DOCUMENTS'] = ''
+FEEDBOT_IGNORE_NEW_DOCUMENTS = bool(os.getenv('FEEDBOT_IGNORE_NEW_DOCUMENTS'))
+
+options = { "language" : "English" }
